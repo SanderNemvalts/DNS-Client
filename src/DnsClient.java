@@ -1,6 +1,4 @@
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -16,16 +14,19 @@ public class DnsClient {
     }
 
     public List<DnsAnswer> resolve(String domain) {
+        final short queryId = 6868;
 
         try (Socket socket = new Socket(dnsServer, port);
-            OutputStream out = socket.getOutputStream();
-             InputStream in = socket.getInputStream()) {
+             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+             DataInputStream in = new DataInputStream(socket.getInputStream())) {
 
             DnsMessageBuilder builder = new DnsMessageBuilder();
-            out.write(builder.buildMessage());
+            byte[] message = builder.buildIpv4Query(domain, queryId);
+            out.writeShort(message.length);
+            out.write(message);
 
-            ByteBuffer lenBuf = ByteBuffer.wrap(in.readNBytes(2));
-            short dataLen = lenBuf.getShort();
+
+            short dataLen = in.readShort();
             byte[] data = in.readNBytes(dataLen);
 
             return DnsResponseParser.parse(data);
