@@ -25,13 +25,12 @@ public class DnsClient {
             out.writeShort(message.length);
             out.write(message);
 
-
-            short dataLen = in.readShort();
-            byte[] data = in.readNBytes(dataLen);
+            short responseLength = in.readShort();
+            byte[] data = in.readNBytes(responseLength);
 
             return DnsResponseParser.parse(data);
         } catch (IOException e) {
-            System.err.println("Server connection error");
+            System.err.println("Server connection error: " + e.getMessage());
             throw new RuntimeException(e);
         }
 
